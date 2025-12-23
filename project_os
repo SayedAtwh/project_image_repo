@@ -1,0 +1,279 @@
+## multileve
+    def __init__(self, pid, burst, queue):
+        self.pid = pid
+        self.burst = burst
+        self.queue = queue
+        self.waiting = 0
+        self.turnaround = 0
+
+
+# -------- SJF --------
+def sjf(processes, start_time):
+    processes.sort(key=lambda p: p.burst)
+    time = start_time
+
+    for p in processes:
+        p.waiting = time - start_time
+        time += p.burst
+        p.turnaround = p.waiting + p.burst
+
+        print(f"P{p.pid} | WT={p.waiting} | TAT={p.turnaround}")
+
+    return time
+
+
+# -------- FIFO --------
+def fifo(processes, start_time):
+    time = start_time
+
+    for p in processes:
+        p.waiting = time - start_time
+        time += p.burst
+        p.turnaround = p.waiting + p.burst
+
+        print(f"P{p.pid} | WT={p.waiting} | TAT={p.turnaround}")
+
+    return time
+
+
+# -------- Multilevel Queue --------
+def multilevel_queue(processes):
+    q1 = [p for p in processes if p.queue == 1]
+    q2 = [p for p in processes if p.queue == 2]
+
+    print("\nQueue 1 - SJF")
+    time = sjf(q1, 0)
+
+    print("\nQueue 2 - FIFO")
+    fifo(q2, time)
+
+    # Averages
+    all_p = q1 + q2
+    avg_wt = sum(p.waiting for p in all_p) / len(all_p)
+    avg_tat = sum(p.turnaround for p in all_p) / len(all_p)
+
+    print("\nAverage Waiting Time =", avg_wt)
+    print("Average Turnaround Time =", avg_tat)
+
+
+# -------- Main --------
+processes = [
+    Process(1, 6, 1),
+    Process(2, 4, 1),
+    Process(3, 5, 2),
+    Process(4, 3, 2)
+]
+
+multilevel_queue(processes)
+
+################################################################################################################################################
+##fifo
+
+frames = []
+fault = 0
+hit = 0
+
+n = int(input("Enter number of frames: "))
+ref = list(map(int, input("Enter reference string: ").split()))
+
+print("\nReference\tFrames\t\tStatus")
+
+for i in range(len(ref)):
+
+    if ref[i] in frames:
+        hit = hit + 1
+        print(ref[i], "\t\t", frames, "\tHit")
+
+    else:
+        fault = fault + 1
+
+        if len(frames) < n:
+            frames.append(ref[i])
+        else:
+            frames.pop(0)
+            frames.append(ref[i])
+
+        print(ref[i], "\t\t", frames, "\tFault")
+
+total = len(ref)
+fault_rate = fault / total
+
+print("\nTotal References =", total)
+print("Page Faults =", fault)
+print("Hits =", hit)
+print("Fault Rate =", fault_rate)
+###################################################################################################################################
+## priorty
+
+
+current_time = 0
+a_tat = 0.0
+a_wt = 0.0
+at = []
+bt = []
+br = []
+n = int(input("Enter number of processes : "))
+
+for i in range(n):
+    pro = int(input("P%d Arrival Time : " % (i+1)))
+    at.append(pro)
+    pro = int(input("P%d Burst Time : " % (i+1)))
+    bt.append(pro)
+    pro = int(input("P%d Priority (Lower Number = Higher Priority) : " % (i+1)))
+    pr.append(pro)
+ct = [0] * n 
+completed = [False] * n
+completed_count = 0
+
+while completed_count < n:
+    candidates = []
+    for i in range(n):
+        if at[i] <= current_time and not completed[i]:
+            candidates.append(i)
+    
+    if not candidates:
+        current_time += 1
+        continue
+    
+    best_idx = min(candidates, key=lambda x: pr[x])
+    current_time += bt[best_idx]
+    ct[best_idx] = current_time
+    completed[best_idx] = True
+    completed_count += 1
+
+print("Completion Time calculated ....")
+
+tat = []
+wt = []
+
+for i in range(n):
+    var = ct[i] - at[i]
+    tat.append(var)
+    var = tat[i] - bt[i]
+    wt.append(var)
+
+print("Turn around Time calculated ....")
+print("Waiting Time calculated ....")
+print("PID\t", "AT\t", "BT\t", "Pri\t", "CT\t", "TAT\t", "WT")
+for i in range(n):
+    print(str((i+1)), "\t", str(at[i]), "\t", str(bt[i]), "\t", str(pr[i]), "\t", str(ct[i]), "\t", str(tat[i]), "\t", str(wt[i]))
+    a_tat = a_tat + tat[i]
+    a_wt = a_wt + wt[i]
+
+a_tat = a_tat / n
+a_wt = a_wt / n
+
+print("Average Turn around Time =" % a_tat)
+print("Average Waiting Time = " % a_wt)
+####################################################################################################################################
+
+## JSF
+
+
+class Process:
+    def _init_(self, pid, at, bt):
+        self.pid = pid
+        self.at = at
+        self.bt = bt
+        self.rem = bt      
+        self.ct = 0
+        self.tat = 0
+        self.wt = 0
+
+
+n = int(input("Enter number of processes: "))
+processes = []
+
+for i in range(n):
+    at = int(input(f"P{i+1} Arrival Time: "))
+    bt = int(input(f"P{i+1} Burst Time: "))
+    processes.append(Process(i+1, at, bt))
+
+
+time = 0
+completed = 0
+
+while completed < n:
+    idx = -1
+    min_bt = 10**9
+
+    for i in range(n):
+        if processes[i].at <= time and processes[i].rem > 0:
+            if processes[i].rem < min_bt:
+                min_bt = processes[i].rem
+                idx = i
+
+    if idx == -1:
+        time += 1
+        continue
+
+    processes[idx].rem -= 1
+    time += 1
+
+    if processes[idx].rem == 0:
+        processes[idx].ct = time
+        completed += 1
+
+
+avg_tat = 0
+avg_wt = 0
+
+for p in processes:
+    p.tat = p.ct - p.at
+    p.wt = p.tat - p.bt
+    avg_tat += p.tat
+    avg_wt += p.wt
+
+
+print("\nPID  AT  BT  CT  TAT  WT")
+print("-" * 30)
+for p in processes:
+    print(p.pid, p.at, p.bt, p.ct, p.tat, p.wt)
+
+print("-" * 30)
+print("Average TAT =", avg_tat / n)
+print("Average WT  =", avg_wt / n)
+#########################################################################################################################
+
+## LRY
+
+
+frames = []
+fault = 0
+hit = 0
+
+n = int(input("Enter number of frames: "))
+ref = list(map(int, input("Enter reference string (numbers separated by space): ").split()))
+
+print("\nReference\tFrames\t\tStatus")
+
+for i in range(len(ref)):
+    current_page = ref[i]
+    
+    if current_page in frames:
+        hit += 1
+        frames.remove(current_page)
+        frames.append(current_page)
+        status = "Hit"
+    
+    else:
+        fault += 1
+        if len(frames) == n:
+            frames.pop(0)
+        
+        frames.append(current_page)
+        status = "Fault"
+
+    print(f"{current_page}\t\t{frames}\t{status}")
+
+total = len(ref)
+fault_rate = fault / total
+
+print("\n--- Statistics ---")
+print("Total References =", total)
+print("Page Faults =", fault)
+print("Hits =", hit)
+print("Fault Rate = {:.2f}".format(fault_rate))
+
+
+
